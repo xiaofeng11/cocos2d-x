@@ -28,6 +28,11 @@ SliderReader* SliderReader::getInstance()
     return instanceSliderReader;
 }
 
+void SliderReader::purge()
+{
+    CC_SAFE_DELETE(instanceSliderReader);
+}
+
 void SliderReader::setPropsFromJsonDictionary(ui::Widget *widget, const rapidjson::Value &options)
 {
     WidgetReader::setPropsFromJsonDictionary(widget, options);

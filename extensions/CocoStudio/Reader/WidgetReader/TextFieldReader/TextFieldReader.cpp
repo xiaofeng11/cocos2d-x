@@ -28,6 +28,11 @@ TextFieldReader* TextFieldReader::getInstance()
     return instanceTextFieldReader;
 }
 
+void TextFieldReader::purge()
+{
+    CC_SAFE_DELETE(instanceTextFieldReader);
+}
+
 void TextFieldReader::setPropsFromJsonDictionary(ui::Widget *widget, const rapidjson::Value &options)
 {
     WidgetReader::setPropsFromJsonDictionary(widget, options);
