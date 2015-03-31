@@ -28,6 +28,11 @@ ListViewReader* ListViewReader::getInstance()
     return instanceListViewReader;
 }
 
+void ListViewReader::purge()
+{
+    CC_SAFE_DELETE(instanceListViewReader);
+}
+
 void ListViewReader::setPropsFromJsonDictionary(ui::Widget *widget, const rapidjson::Value &options)
 {
     ScrollViewReader::setPropsFromJsonDictionary(widget, options);
