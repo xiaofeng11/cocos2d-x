@@ -25,11 +25,16 @@ public:
 
     // predefined screen size
     int getScreenSizeCount(void);
+    // predefined design resolution size
+    int getDesignResolutionSizeCount(void);
     cocos2d::Size getInitViewSize();
+    cocos2d::Size getInitDesignResolutionSize();
+    ResolutionPolicy getInitDesignResolutionPolicy();
     string getInitViewName();
     string getEntryFile();
     rapidjson::Document& getConfigJsonRoot();
     const SimulatorScreenSize getScreenSize(int index);
+    const SimulatorScreenSize getDesignResolutionSize(int index);
     void setConsolePort(int port);
     void setUploadPort(int port);
     int getConsolePort();
@@ -37,18 +42,23 @@ public:
     int getDebugPort();
     bool isLanscape();
     bool isWindowTop();
-    
+
     void setEntryFile(const std::string &file);
     void setInitViewSize(const cocos2d::Size &size);
+    void setInitDesignResolutionSize(const cocos2d::Size &size);
+    void setInitDesignResolutionPolicy(ResolutionPolicy policy);
     void setBindAddress(const std::string &address);
     const std::string &getBindAddress();
-    
+
 private:
     ConfigParser(void);
     void setDebugPort(int port);
     static ConfigParser *s_sharedConfigParserInstance;
     ScreenSizeArray _screenSizeArray;
+    ScreenSizeArray _designResolutionSizeArray;
     cocos2d::Size _initViewSize;
+    cocos2d::Size _initDesignResolutionSize;
+    ResolutionPolicy _initDesignResolutionPolicy;
     string _viewName;
     string _entryfile;
     bool _isLandscape;
@@ -57,9 +67,8 @@ private:
     int _uploadPort;
     int _debugPort;
     string _bindAddress;
-    
+
     rapidjson::Document _docRootjson;
 };
 
 #endif  // __CONFIG_PARSER_H__
-

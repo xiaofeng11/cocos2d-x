@@ -37,6 +37,8 @@ ProjectConfig::ProjectConfig()
     , _writablePath("")
     , _packagePath("")
     , _frameSize(960, 640)
+    , _designResolutionSize(960, 640)
+    , _designResolutionPolicy(ResolutionPolicy::EXACT_FIT)
     , _frameScale(1.0f)
     , _showConsole(true)
     , _loadPrecompiledFramework(false)
@@ -169,6 +171,29 @@ void ProjectConfig::setFrameSize(const cocos2d::Size &frameSize)
     }
 }
 
+cocos2d::Size ProjectConfig::getDesignResolutionSize() const
+{
+    return _designResolutionSize;
+}
+
+void ProjectConfig::setDesignResolutionSize(const cocos2d::Size &resolutionSize)
+{
+    if (resolutionSize.width > 0 && resolutionSize.height > 0)
+    {
+        _designResolutionSize = resolutionSize;
+    }
+}
+
+ResolutionPolicy ProjectConfig::getDesignResolutionPolicy() const
+{
+    return _designResolutionPolicy;
+}
+
+void ProjectConfig::setDesignResolutionPolicy(ResolutionPolicy policy)
+{
+    _designResolutionPolicy = policy;
+}
+
 bool ProjectConfig::isLandscapeFrame() const
 {
     return _frameSize.width > _frameSize.height;
@@ -194,6 +219,33 @@ void ProjectConfig::changeFrameOrientationToPortait()
 void ProjectConfig::changeFrameOrientationToLandscape()
 {
     if (!isLandscapeFrame()) changeFrameOrientation();
+}
+
+bool ProjectConfig::isLandscapeDesignResolution() const
+{
+    return _designResolutionSize.width > _designResolutionSize.height;
+}
+
+bool ProjectConfig::isPortraitDesignResolution() const
+{
+    return _designResolutionSize.width < _designResolutionSize.height;
+}
+
+void ProjectConfig::changeDesignResolutionOrientation()
+{
+    float w = _designResolutionSize.width;
+    _designResolutionSize.width = _designResolutionSize.height;
+    _designResolutionSize.height = w;
+}
+
+void ProjectConfig::changeDesignResolutionOrientationToPortait()
+{
+    if (isLandscapeDesignResolution()) changeDesignResolutionOrientation();
+}
+
+void ProjectConfig::changeDesignResolutionOrientationToLandscape()
+{
+    if (!isLandscapeDesignResolution()) changeDesignResolutionOrientation();
 }
 
 float ProjectConfig::getFrameScale() const
@@ -246,7 +298,7 @@ void ProjectConfig::setDebugLogFilePath(const std::string &logFile)
 string ProjectConfig::getDebugLogFilePath() const
 {
     if (isAbsolutePath(_debugLogFile)) return _debugLogFile;
-    
+
     auto path(getProjectDir());
     path.append(_debugLogFile);
     return path;
@@ -409,6 +461,58 @@ void ProjectConfig::parseCommandLine(const vector<string> &args)
             vector<string> pathes = split((*it), ';');
             setSearchPath(pathes);
         }
+        else if (arg.compare("-design-resolution-size") == 0)
+        {
+            ++it;
+            if (it == args.end()) break;
+            const string& sizeStr(*it);
+            size_t pos = sizeStr.find('x');
+            int width = 0;
+            int height = 0;
+            if (pos != sizeStr.npos && pos > 0)
+            {
+                string widthStr, heightStr;
+                widthStr.assign(sizeStr, 0, pos);
+                heightStr.assign(sizeStr, pos + 1, sizeStr.length() - pos);
+                width = atoi(widthStr.c_str());
+                height = atoi(heightStr.c_str());
+                setDesignResolutionSize(cocos2d::Size(width, height));
+            }
+        }
+        else if (arg.compare("-design-resolution-policy") == 0)
+        {
+            ++it;
+            if (it == args.end()) break;
+            std::string policyStr(*it);
+            ResolutionPolicy policy;
+
+            if (policyStr.compare("EXACT_FIT") == 0)
+            {
+                policy = ResolutionPolicy::EXACT_FIT;
+            }
+            else if (policyStr.compare("NO_BORDER") == 0)
+            {
+                policy = ResolutionPolicy::NO_BORDER;
+            }
+            else if (policyStr.compare("SHOW_ALL") == 0)
+            {
+                policy = ResolutionPolicy::SHOW_ALL;
+            }
+            else if (policyStr.compare("FIXED_HEIGHT") == 0)
+            {
+                policy = ResolutionPolicy::FIXED_HEIGHT;
+            }
+            else if (policyStr.compare("FIXED_WIDTHT") == 0)
+            {
+                policy = ResolutionPolicy::FIXED_WIDTH;
+            }
+            else
+            {
+                policy = ResolutionPolicy::UNKNOWN;
+            }
+
+            setDesignResolutionPolicy(policy);
+        }
 
         ++it;
     }
@@ -423,7 +527,7 @@ string ProjectConfig::makeCommandLine(unsigned int mask /* = kProjectConfigAll *
     {
         buff << " " << cmd;
     }
-    
+
     string result = buff.str();
     while (result.at(0) == ' ')
     {
@@ -436,9 +540,9 @@ string ProjectConfig::makeCommandLine(unsigned int mask /* = kProjectConfigAll *
 vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProjectConfigAll */) const
 {
     vector<string> ret;
-    
+
     stringstream buff;
-    
+
     if (mask & kProjectConfigProjectDir)
     {
         auto path = getProjectDir();
@@ -448,7 +552,7 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             ret.push_back(dealWithSpaceWithPath(path));
         }
     }
-    
+
     if (mask & kProjectConfigScriptFile)
     {
         auto path = getScriptFileRealPath();
@@ -458,7 +562,7 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             ret.push_back(dealWithSpaceWithPath(path));
         }
     }
-    
+
     if (mask & kProjectConfigWritablePath)
     {
         auto path = getWritableRealPath();
@@ -468,18 +572,18 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             ret.push_back(dealWithSpaceWithPath(path));
         }
     }
-    
+
     if (mask & kProjectConfigFrameSize)
     {
         buff.str("");
         buff << (int)getFrameSize().width;
         buff << "x";
         buff << (int)getFrameSize().height;
-        
+
         ret.push_back("-resolution");
         ret.push_back(buff.str());
     }
-    
+
     if (mask & kProjectConfigFrameScale)
     {
         if (getFrameScale() < 1.0f)
@@ -487,12 +591,12 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             buff.str("");
             buff.precision(2);
             buff << getFrameScale();
-            
+
             ret.push_back("-scale");
             ret.push_back(buff.str());
         }
     }
-    
+
     if (mask & kProjectConfigWriteDebugLogToFile)
     {
         if (isWriteDebugLogToFile())
@@ -501,7 +605,7 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             ret.push_back(getDebugLogFilePath());
         }
     }
-    
+
     if (mask & kProjectConfigShowConsole)
     {
         if (isShowConsole())
@@ -515,7 +619,7 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             ret.push_back("disable");
         }
     }
-    
+
     if (mask & kProjectConfigWindowOffset)
     {
         if (_windowOffset.x != 0 && _windowOffset.y != 0)
@@ -525,27 +629,27 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             buff << ",";
             buff << (int)_windowOffset.y;
             buff << "";
-            
+
             ret.push_back("-position");
             ret.push_back(buff.str());
         }
     }
-    
+
     if (mask & kProjectConfigDebugger)
     {
         switch (getDebuggerType())
         {
-            case kCCRuntimeDebuggerCodeIDE:
-                ret.push_back("-debugger");
-                ret.push_back("codeide");
-                break;
-            case kCCRuntimeDebuggerStudio:
-                ret.push_back("-debugger");
-                ret.push_back("studio");
-                break;
+        case kCCRuntimeDebuggerCodeIDE:
+            ret.push_back("-debugger");
+            ret.push_back("codeide");
+            break;
+        case kCCRuntimeDebuggerStudio:
+            ret.push_back("-debugger");
+            ret.push_back("studio");
+            break;
         }
     }
-    
+
     if (mask & kProjectConfigListen)
     {
         if (!_bindAddress.empty())
@@ -554,7 +658,7 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
             ret.push_back(_bindAddress);
         }
     }
-    
+
     if (mask & kProjectConfigSearchPath)
     {
         if (_searchPath.size() > 0)
@@ -565,13 +669,31 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
                 pathbuff << dealWithSpaceWithPath(path) << ";";
             }
             string pathArgs = pathbuff.str();
-            pathArgs[pathArgs.length()-1] = '\0';
-            
+            pathArgs[pathArgs.length() - 1] = '\0';
+
             ret.push_back("-search-path");
             ret.push_back(pathArgs);
         }
     }
-       
+
+    if (mask & kProjectConfigDesignResolutionSize)
+    {
+        buff.str("");
+        buff << (int)getDesignResolutionSize().width;
+        buff << "x";
+        buff << (int)getDesignResolutionSize().height;
+
+        ret.push_back("-design-resolution-size");
+        ret.push_back(buff.str());
+    }
+
+    if (mask & kProjectConfigDesignResolutionPolicy)
+    {
+        std::string policyStr = convertResolutionPolicyToStr(getDesignResolutionPolicy());
+        ret.push_back("-design-resolution-policy");
+        ret.push_back(policyStr);
+    }
+
     return ret;
 }
 
@@ -649,9 +771,9 @@ void ProjectConfig::dump()
     CCLOG("    frame scale: %0.2f", _frameScale);
     CCLOG("    show console: %s", _showConsole ? "YES" : "NO");
     CCLOG("    write debug log: %s (%s)", _writeDebugLogToFile ? getDebugLogFilePath().c_str() : "NO",
-                                          _writeDebugLogToFile ? getDebugLogFilePath().c_str() : "");
+        _writeDebugLogToFile ? getDebugLogFilePath().c_str() : "");
     CCLOG("    listen: %s", _bindAddress.c_str());
-    
+
     if (_debuggerType == kCCRuntimeDebuggerLDT)
     {
         CCLOG("    debugger: Eclipse LDT");
@@ -668,13 +790,16 @@ void ProjectConfig::dump()
     {
         CCLOG("    debugger: none");
     }
-    
+
     CCLOG("    add searching path:");
     for (auto &path : _searchPath)
     {
         CCLOG("        %s", path.c_str());
     }
-    
+
+    CCLOG("    design resolution size: %0.0f x %0.0f", _designResolutionSize.width, _designResolutionSize.height);
+    CCLOG("    design resolution policy: %s", convertResolutionPolicyToStr(getDesignResolutionPolicy()).c_str());
+
     CCLOG("\n\n");
 }
 
@@ -772,6 +897,38 @@ bool ProjectConfig::isAbsolutePath(const string &path) const
         return path.length() > 0 && path[0] == '/';
     }
     return path.length() > 2 && path[1] == ':';
+}
+
+string ProjectConfig::convertResolutionPolicyToStr(ResolutionPolicy policy) const
+{
+    string policyStr;
+
+    if (policy == ResolutionPolicy::EXACT_FIT)
+    {
+        policyStr = "EXACT_FIT";
+    }
+    else if (policy == ResolutionPolicy::NO_BORDER)
+    {
+        policyStr = "NO_BORDER";
+    }
+    else if (policy == ResolutionPolicy::SHOW_ALL)
+    {
+        policyStr = "SHOW_ALL";
+    }
+    else if (policy == ResolutionPolicy::FIXED_HEIGHT)
+    {
+        policyStr = "FIXED_HEIGHT";
+    }
+    else if (policy == ResolutionPolicy::FIXED_WIDTH)
+    {
+        policyStr = "FIXED_WIDTHT";
+    }
+    else
+    {
+        policyStr = "UNKNOWN";
+    }
+
+    return policyStr;
 }
 
 string ProjectConfig::dealWithSpaceWithPath(const string &path) const

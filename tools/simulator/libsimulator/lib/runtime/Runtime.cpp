@@ -44,7 +44,7 @@ void recvBuf(int fd, char *pbuf, unsigned long bufsize)
     unsigned long leftLength = bufsize;
     while (leftLength != 0)
     {
-        size_t recvlen = recv(fd, pbuf + bufsize - leftLength, leftLength ,0);
+        size_t recvlen = recv(fd, pbuf + bufsize - leftLength, leftLength, 0);
         if (recvlen <= 0)
         {
             usleep(1);
@@ -59,7 +59,7 @@ void sendBuf(int fd, const char *pbuf, unsigned long bufsize)
     unsigned long leftLength = bufsize;
     while (leftLength != 0)
     {
-        size_t sendlen = send(fd, pbuf + bufsize - leftLength, leftLength ,0);
+        size_t sendlen = send(fd, pbuf + bufsize - leftLength, leftLength, 0);
         if (sendlen <= 0)
         {
             usleep(1);
@@ -72,10 +72,10 @@ void sendBuf(int fd, const char *pbuf, unsigned long bufsize)
 std::string& replaceAll(std::string& str, const std::string& old_value, const std::string& new_value)
 {
     size_t start = 0;
-    while(true)
+    while (true)
     {
         size_t pos = 0;
-        if((pos = str.find(old_value, start)) != std::string::npos) {
+        if ((pos = str.find(old_value, start)) != std::string::npos) {
             str.replace(pos, old_value.length(), new_value);
             start = pos + new_value.length();
         }
@@ -93,7 +93,8 @@ const char* getRuntimeVersion()
 
 void resetDesignResolution()
 {
-    cocos2d::Size size = ConfigParser::getInstance()->getInitViewSize();
+    cocos2d::Size size = ConfigParser::getInstance()->getInitDesignResolutionSize();
+    ResolutionPolicy policy = ConfigParser::getInstance()->getInitDesignResolutionPolicy();
     if (!ConfigParser::getInstance()->isLanscape())
     {
         if (size.width > size.height)
@@ -104,7 +105,7 @@ void resetDesignResolution()
         if (size.width < size.height)
             std::swap(size.width, size.height);
     }
-    Director::getInstance()->getOpenGLView()->setDesignResolutionSize(size.width, size.height, ResolutionPolicy::EXACT_FIT);
+    Director::getInstance()->getOpenGLView()->setDesignResolutionSize(size.width, size.height, policy);
 }
 
 //
@@ -112,9 +113,9 @@ void resetDesignResolution()
 //
 
 RuntimeEngine::RuntimeEngine()
-: _runtime(nullptr)
-, _eventTrackingEnable(false)
-, _launchEvent("empty")
+    : _runtime(nullptr)
+    , _eventTrackingEnable(false)
+    , _launchEvent("empty")
 {
 
 }
@@ -153,7 +154,7 @@ void RuntimeEngine::setupRuntime()
     }
     // Js
     else if ((entryFile.rfind(".js") != std::string::npos) ||
-             (entryFile.rfind(".jsc") != std::string::npos))
+        (entryFile.rfind(".jsc") != std::string::npos))
     {
         _launchEvent = "js";
         _runtime = _runtimes[kRuntimeEngineJs];
@@ -299,7 +300,7 @@ void RuntimeEngine::end()
     ConsoleCommand::purge();
     FileServer::getShareInstance()->stop();
     ConfigParser::purge();
-//    FileServer::purge();
+    //    FileServer::purge();
 }
 
 void RuntimeEngine::setEventTrackingEnable(bool enable)
@@ -368,7 +369,7 @@ void RuntimeEngine::trackEvent(const std::string &eventName)
 {
     if (!_eventTrackingEnable)
     {
-        return ;
+        return;
     }
 
 #if ((CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC))
@@ -381,12 +382,12 @@ void RuntimeEngine::trackEvent(const std::string &eventName)
     const char *platform = "UNKNOWN";
 #endif
 
-    char cidBuf[64] = {0};
+    char cidBuf[64] = { 0 };
     auto guid = player::DeviceEx::getInstance()->getUserGUID();
     snprintf(cidBuf, sizeof(cidBuf), "%x", XXH32(guid.c_str(), (int)guid.length(), 0));
     auto request = extra::HTTPRequest::createWithUrl(NULL,
-                                                     "http://www.google-analytics.com/collect",
-                                                     kCCHTTPRequestMethodPOST);
+        "http://www.google-analytics.com/collect",
+        kCCHTTPRequestMethodPOST);
     request->addPOSTValue("v", "1");
     request->addPOSTValue("tid", "UA-58200293-1");
     request->addPOSTValue("cid", cidBuf);
