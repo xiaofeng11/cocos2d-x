@@ -30,10 +30,11 @@ using namespace std;
 #define kProjectConfigSearchPath                4096    //
 #define kProjectConfigDesignResolutionSize      8192    // -design-resolution-size 960x640
 #define kProjectConfigDesignResolutionPolicy    16384   // -design-resolution-policy "EXACT_FIT"
+#define kProjectConfigDesignContentScaleFactor  32768   // -design-content-scale-factor "1.0"
 
-#define kProjectConfigOpenRecent (kProjectConfigProjectDir | kProjectConfigScriptFile | kProjectConfigPackagePath | kProjectConfigWritablePath | kProjectConfigFrameSize | kProjectConfigFrameScale | kProjectConfigShowConsole | kProjectConfigLoadPrecompiledFramework | kProjectConfigWriteDebugLogToFile | kProjectConfigDesignResolutionSize | kProjectConfigDesignResolutionPolicy)
+#define kProjectConfigOpenRecent (kProjectConfigProjectDir | kProjectConfigScriptFile | kProjectConfigPackagePath | kProjectConfigWritablePath | kProjectConfigFrameSize | kProjectConfigFrameScale | kProjectConfigShowConsole | kProjectConfigLoadPrecompiledFramework | kProjectConfigWriteDebugLogToFile | kProjectConfigDesignResolutionSize | kProjectConfigDesignResolutionPolicy | kProjectConfigDesignContentScaleFactor)
 
-#define kProjectConfigAll (kProjectConfigProjectDir | kProjectConfigScriptFile | kProjectConfigPackagePath | kProjectConfigWritablePath | kProjectConfigFrameSize | kProjectConfigFrameScale | kProjectConfigShowConsole | kProjectConfigLoadPrecompiledFramework | kProjectConfigWriteDebugLogToFile | kProjectConfigWindowOffset | kProjectConfigDebugger | kProjectConfigListen | kProjectConfigSearchPath | kProjectConfigDesignResolutionSize | kProjectConfigDesignResolutionPolicy)
+#define kProjectConfigAll (kProjectConfigProjectDir | kProjectConfigScriptFile | kProjectConfigPackagePath | kProjectConfigWritablePath | kProjectConfigFrameSize | kProjectConfigFrameScale | kProjectConfigShowConsole | kProjectConfigLoadPrecompiledFramework | kProjectConfigWriteDebugLogToFile | kProjectConfigWindowOffset | kProjectConfigDebugger | kProjectConfigListen | kProjectConfigSearchPath | kProjectConfigDesignResolutionSize | kProjectConfigDesignResolutionPolicy | kProjectConfigDesignContentScaleFactor)
 
 
 #define kProjectConfigConsolePort   6010
@@ -48,6 +49,7 @@ public:
     static const int DEFAULT_WIDTH = 640;
     static const int DEFAULT_HEIGHT = 960;
     static const ResolutionPolicy DEFAULT_RESOLUTION_POLICY = ResolutionPolicy::EXACT_FIT;
+    static float DEFAULT_CONTENT_SCALE_FACTOR() { return 1.0f; };
 
     string getProjectDir() const;
     void setProjectDir(const string &projectDir);
@@ -72,6 +74,8 @@ public:
     void setDesignResolutionSize(const cocos2d::Size &resolutionSize);
     ResolutionPolicy getDesignResolutionPolicy() const;
     void setDesignResolutionPolicy(ResolutionPolicy policy);
+    float getDesignContentScaleFactor() const;
+    void setDesignContentScaleFactor(float scaleFactor);
     bool isLandscapeFrame() const;
     bool isPortraitFrame() const;
     void changeFrameOrientation();
@@ -132,6 +136,7 @@ private:
     cocos2d::Size _frameSize;
     cocos2d::Size _designResolutionSize;
     ResolutionPolicy _designResolutionPolicy;
+    float _designContentScaleFactor;
     float _frameScale;
     bool _showConsole;
     bool _loadPrecompiledFramework;

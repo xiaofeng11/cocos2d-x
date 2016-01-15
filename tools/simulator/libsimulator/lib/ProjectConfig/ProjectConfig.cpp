@@ -39,6 +39,7 @@ ProjectConfig::ProjectConfig()
     , _frameSize(960, 640)
     , _designResolutionSize(960, 640)
     , _designResolutionPolicy(ResolutionPolicy::EXACT_FIT)
+    , _designContentScaleFactor(1.0f)
     , _frameScale(1.0f)
     , _showConsole(true)
     , _loadPrecompiledFramework(false)
@@ -192,6 +193,16 @@ ResolutionPolicy ProjectConfig::getDesignResolutionPolicy() const
 void ProjectConfig::setDesignResolutionPolicy(ResolutionPolicy policy)
 {
     _designResolutionPolicy = policy;
+}
+
+float ProjectConfig::getDesignContentScaleFactor() const
+{
+    return _designContentScaleFactor;
+}
+
+void ProjectConfig::setDesignContentScaleFactor(float scaleFactor)
+{
+    _designContentScaleFactor = scaleFactor;
 }
 
 bool ProjectConfig::isLandscapeFrame() const
@@ -513,6 +524,13 @@ void ProjectConfig::parseCommandLine(const vector<string> &args)
 
             setDesignResolutionPolicy(policy);
         }
+        else if (arg.compare("-design-content-scale-factor") == 0)
+        {
+            ++it;
+            if (it == args.end()) break;
+            float scale = atof((*it).c_str());
+            setDesignContentScaleFactor(scale);
+        }
 
         ++it;
     }
@@ -694,6 +712,16 @@ vector<string> ProjectConfig::makeCommandLineVector(unsigned int mask /* = kProj
         ret.push_back(policyStr);
     }
 
+    if (mask & kProjectConfigDesignContentScaleFactor)
+    {
+        buff.str("");
+        buff.precision(3);
+        buff << getDesignContentScaleFactor();
+
+        ret.push_back("-design-content-scale-factor");
+        ret.push_back(buff.str());
+    }
+
     return ret;
 }
 
@@ -799,6 +827,7 @@ void ProjectConfig::dump()
 
     CCLOG("    design resolution size: %0.0f x %0.0f", _designResolutionSize.width, _designResolutionSize.height);
     CCLOG("    design resolution policy: %s", convertResolutionPolicyToStr(getDesignResolutionPolicy()).c_str());
+    CCLOG("    design content scale factor: %0.2f", _designContentScaleFactor);
 
     CCLOG("\n\n");
 }
