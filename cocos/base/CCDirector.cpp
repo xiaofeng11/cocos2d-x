@@ -933,7 +933,7 @@ void Director::reset()
 
     // Close all websocket connection. It has to be invoked before cleaning scheduler
     network::WebSocket::closeAllConnections();
-
+    
     // cleanup scheduler
     getScheduler()->unscheduleAll();
     
